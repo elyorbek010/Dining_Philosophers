@@ -3,7 +3,7 @@
 
 #include "stdbool.h"
 
-#define CYCLE_TIME_US 100000 // time should be enough for all philosophers to finish their job
+#define CYCLE_TIME_US 1000 // time should be enough for all philosophers to finish their job
 
 #define eat_cycles() (3 + rand() % 7)   // cycle length [3, 9]
 #define think_cycles() (3 + rand() % 7) // cycle length [3, 9]
