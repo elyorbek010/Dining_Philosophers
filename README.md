@@ -10,16 +10,16 @@ silverware 1       silverware 2        silverware 3              ...
 
 ## Problem:  
 There are N philosophers and N silverware
-Each philosopher needs 2 silverware around him to consume meal
-But if each philosopher take first silverware, and at the same time
-another philosopher takes second silverware, then both philosophers
-can not consume their meal because they are waiting for each other's
+Each philosopher needs 2 silverware around him to consume meal  
+But if a philosopher takes first silverware, and at the same time
+another philosopher takes the second silverware,   
+then both philosophers can not consume their meal because they are waiting for each other's
 shared silverware
 
 ## Solution:  
 Philosophers at even location(starting from 0) should first take
 silverware on their right, whereas philosophers at odd location 
-should first take silverware on their left
+should first take silverware on their left  
 In this case, at least each second philosopher can consume their meal
 
 ## RESULT:  
