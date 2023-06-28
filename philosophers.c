@@ -137,7 +137,6 @@ void *philosopher_routine(void *arg)
 
         case FINISHED:
         {
-            // do nothing, keep looping to keep other philosophers company, till everybody finished
             break;
         }
         }
@@ -220,7 +219,7 @@ static void my_log(struct philosopher_ctx philosopher)
         log_eating(philosopher.id, philosopher.cur_cycle);
         break;
     case FINISHED:
-        log_end(philosopher.id, philosopher.cur_cycle);
+        log_end(philosopher.id, philosopher.cur_cycle + 1);
         break;
     }
 }
