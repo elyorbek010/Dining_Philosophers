@@ -5,11 +5,11 @@
 
 #define CYCLE_TIME_US 1000 // time should be enough for all philosophers to finish their job
 
-#define eat_cycles() (3 + rand() % 7)   // cycle length [3, 9]
-#define think_cycles() (3 + rand() % 7) // cycle length [3, 9]
+#define eat_cycles() 5
+#define think_cycles() 5
 
 #define PHILOSOPHERS_N 5
-#define TOTAL_MEAL_COURSES_N 3
+#define TOTAL_MEAL_COURSES_N 5
 
 void philosophers_create(void);
 

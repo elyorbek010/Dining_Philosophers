@@ -6,7 +6,7 @@ void main(void)
     philosophers_create();
 
     while (!philosophers_finished())
-        usleep(CYCLE_TIME_US*10);
+        sleep(1);
 
     philosophers_destroy();
 }

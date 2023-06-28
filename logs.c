@@ -1,6 +1,7 @@
 #include "logs.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #define EATING_SYMBOL 'E'
 #define THINKING_SYMBOL '_'
@@ -8,6 +9,10 @@
 #define TRYING_TO_GET_RIGHT_SILVERWARE_SYMBOL 'R'
 
 static char my_log[MAX_LOG_ROWS][MAX_LOG_COLUMNS];
+
+void log_init(void){
+    memset(my_log, ' ', MAX_LOG_ROWS * MAX_LOG_COLUMNS);
+}
 
 void log_thinking(size_t id, size_t cycle)
 {
@@ -25,12 +30,19 @@ void log_eating(size_t id, size_t cycle)
     my_log[id][cycle] = EATING_SYMBOL;
 }
 
+void log_end(size_t id, size_t cycle){
+    my_log[id][cycle] = '\0';
+}
+
 void save_logs(void)
 {
     FILE *fp = fopen(LOG_FILE_NAME, "w");
 
-    for (size_t i = 0; i < MAX_LOG_ROWS && my_log[i][0] != '\0'; i++)
+    for (size_t i = 0; i < MAX_LOG_ROWS; i++)
     {
+        if(my_log[i][0] == ' '){
+            break;
+        }
         fprintf(fp, "Philosopher %zu: %s\n", i, my_log[i]);
     }
 

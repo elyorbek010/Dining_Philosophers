@@ -8,8 +8,7 @@
 #include <unistd.h>
 
 pthread_barrier_t cycle_start; // philosophers wait cycle start each cycle
-
-static atomic_size_t cur_cycle = 0;  // counter controlled by main
+ 
 static atomic_uint cnt_finished = 0; // number of philosophers finished
 static atomic_bool exit_flag = 0;    // flag is up when everybody finished
 
@@ -35,6 +34,8 @@ struct philosopher_ctx
     size_t silverware_2;
 
     enum philosopher_state state;
+
+    atomic_size_t cur_cycle;
 };
 
 static void philosopher_state_transition(struct philosopher_ctx *philosopher, enum philosopher_state new_state);
@@ -61,14 +62,15 @@ void *philosopher_routine(void *arg)
         .silverware_1 = (id + id % 2) % PHILOSOPHERS_N,
         .silverware_2 = (id + 1 - id % 2) % PHILOSOPHERS_N,
         .state = 0,
+        .cur_cycle = 0
     };
 
     philosopher_state_transition(&philosopher, THINK);
 
-    while (!philosophers_finished())
-    {
-        pthread_barrier_wait(&cycle_start);
+    pthread_barrier_wait(&cycle_start); // starting point
 
+    while (philosopher.state != FINISHED)
+    {
         my_log(philosopher);
 
         switch (philosopher.state)
@@ -123,6 +125,7 @@ void *philosopher_routine(void *arg)
                 {
                     atomic_fetch_add(&cnt_finished, 1);
                     philosopher_state_transition(&philosopher, FINISHED);
+                    my_log(philosopher);
                 }
                 else
                 {
@@ -138,21 +141,10 @@ void *philosopher_routine(void *arg)
             break;
         }
         }
-    }
-}
-
-void *administrator_routine(void *arg)
-{
-    // control pulse clock(cycles)
-    while (cnt_finished < PHILOSOPHERS_N)
-    {
-        pthread_barrier_wait(&cycle_start);
+        
         usleep(CYCLE_TIME_US);
-        cur_cycle++;
+        philosopher.cur_cycle++;
     }
-
-    atomic_store_explicit(&exit_flag, 1, memory_order_release);
-    pthread_barrier_wait(&cycle_start); // final cycle, everyone exits
 }
 
 static void philosopher_state_transition(struct philosopher_ctx *philosopher, enum philosopher_state new_state)
@@ -181,8 +173,10 @@ static void philosopher_state_transition(struct philosopher_ctx *philosopher, en
 
 void philosophers_create(void)
 {
+    log_init();
+
     pthread_t thread;
-    pthread_barrier_init(&cycle_start, NULL, PHILOSOPHERS_N + 1); // philosophers + administrator
+    pthread_barrier_init(&cycle_start, NULL, PHILOSOPHERS_N); // philosophers
 
     for (size_t i = 0; i < PHILOSOPHERS_N; i++)
     {
@@ -190,9 +184,6 @@ void philosophers_create(void)
         pthread_detach(thread);
         pthread_mutex_init(&silverware[i], NULL);
     }
-
-    pthread_create(&thread, NULL, administrator_routine, NULL);
-    pthread_detach(thread);
 }
 
 void philosophers_destroy(void)
@@ -209,7 +200,7 @@ void philosophers_destroy(void)
 
 bool philosophers_finished(void)
 {
-    return atomic_load_explicit(&exit_flag, memory_order_acquire);
+    return cnt_finished == PHILOSOPHERS_N;
 }
 
 static void my_log(struct philosopher_ctx philosopher)
@@ -217,18 +208,19 @@ static void my_log(struct philosopher_ctx philosopher)
     switch (philosopher.state)
     {
     case THINK:
-        log_thinking(philosopher.id, cur_cycle);
+        log_thinking(philosopher.id, philosopher.cur_cycle);
         break;
     case GET_SILVERWARE_1:
-        log_getting_silverware(philosopher.id, cur_cycle, philosopher.silverware_1);
+        log_getting_silverware(philosopher.id, philosopher.cur_cycle, philosopher.silverware_1);
         break;
     case GET_SILVERWARE_2:
-        log_getting_silverware(philosopher.id, cur_cycle, philosopher.silverware_2);
+        log_getting_silverware(philosopher.id, philosopher.cur_cycle, philosopher.silverware_2);
         break;
     case EAT:
-        log_eating(philosopher.id, cur_cycle);
+        log_eating(philosopher.id, philosopher.cur_cycle);
         break;
     case FINISHED:
+        log_end(philosopher.id, philosopher.cur_cycle);
         break;
     }
 }
